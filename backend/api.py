@@ -1,10 +1,24 @@
+import os
 from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import pandas as pd
 from fuzzywuzzy import fuzz
 import io
 
 app = FastAPI()
+
+# Get CORS origins from environment variable or use default
+origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Mapping for common number-to-letter substitutions
 substitution_map = {

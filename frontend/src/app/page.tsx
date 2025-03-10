@@ -28,6 +28,7 @@ export default function Home() {
         await axios.get(`${backendUrl}/health`);
         setIsBackendConnected(true);
       } catch (error) {
+        console.error('Backend connection failed:', error);
         setIsBackendConnected(false);
       }
     };
