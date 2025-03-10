@@ -10,6 +10,10 @@ substitution_map = {
     '0': 'O',  # 0 can be O
     '3': 'E',  # 3 can be E
     '2': 'Z',  # 2 can be Z
+    '6': 'G',  # 6 can be G
+    '7': 'T',  # 7 can be T
+    '8': 'B',  # 8 can be B
+    '9': 'P',  # 9 can be P
 }
 
 def normalize_text(text):
@@ -37,17 +41,19 @@ def check_for_similar_names(names, registrations, threshold=80):
     Returns a list of tuples: (target name, original registration, normalized registration, similarity score).
     """
     similar_registrations = []
+    all_comparisons = []
     # Normalize target names
     normalized_names = {name: normalize_text(name) for name in names}
-    
     for registration in registrations:
         normalized_registration = normalize_text(registration)
         for name, normalized_name in normalized_names.items():
             # Use fuzzy partial ratio to allow extra characters around the match
             similarity = fuzz.partial_ratio(normalized_name, normalized_registration)
+            # Store all comparisons
+            all_comparisons.append((name, registration, normalized_registration, similarity))
             if similarity >= threshold:
                 similar_registrations.append((name, registration, normalized_registration, similarity))
-    return similar_registrations
+    return similar_registrations, all_comparisons
 
 # ---------------------------
 # Load registrations from Excel
@@ -68,13 +74,19 @@ registrations = df.iloc[:, 1].dropna().tolist()
 names_to_check = ["Asim", "Suna", "Sue", "Kay", "Kayhan", "Kai", "Niz"]
 
 # Get similar registrations using fuzzy matching
-matches = check_for_similar_names(names_to_check, registrations, threshold=80)
+matches, all_comparisons = check_for_similar_names(names_to_check, registrations, threshold=80)
 
 # ---------------------------
-# Output the results
+# Output the results to Excel
 # ---------------------------
-if matches:
-    for name, orig_reg, norm_reg, similarity in matches:
-        print(f"Name '{name}' closely resembles registration plate '{orig_reg}' (Normalized: '{norm_reg}', Similarity: {similarity}%)")
-else:
-    print("No similar registrations found.")
+# Create DataFrames for the results
+df_all_comparisons = pd.DataFrame(all_comparisons, columns=['Name', 'Registration', 'Normalized Registration', 'Similarity'])
+df_matches = pd.DataFrame(matches, columns=['Name', 'Registration', 'Normalized Registration', 'Similarity'])
+
+# Write the DataFrames to an Excel file with two sheets
+output_file_path = './Registration_Matches.xlsx'
+with pd.ExcelWriter(output_file_path) as writer:
+    df_all_comparisons.to_excel(writer, sheet_name='All Comparisons', index=False)
+    df_matches.to_excel(writer, sheet_name='Matches', index=False)
+
+print(f"Results have been written to {output_file_path}")
