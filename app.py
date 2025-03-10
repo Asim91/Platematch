@@ -89,7 +89,7 @@ def run_comparison():
         df_all_comparisons = pd.DataFrame(all_comparisons, columns=['Name', 'Registration', 'Normalized Registration', 'Similarity'])
         df_matches = pd.DataFrame(matches, columns=['Name', 'Registration', 'Normalized Registration', 'Similarity'])
 
-        output_file_path = './Registration_Matches.xlsx'
+        output_file_path = os.path.abspath('./Registration_Matches.xlsx')
         with pd.ExcelWriter(output_file_path) as writer:
             df_all_comparisons.to_excel(writer, sheet_name='All Comparisons', index=False)
             df_matches.to_excel(writer, sheet_name='Matches', index=False)
