@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import pandas as pd
@@ -77,7 +77,10 @@ def check_for_similar_names(names, registrations):
     return all_comparisons
 
 @app.post("/uploadfile/")
-async def create_upload_file(file: UploadFile = File(...), names: str = "Asim,Suna,Sue,Kay,Kayhan,Kai,Niz"):
+async def create_upload_file(
+    file: UploadFile = File(...),
+    names: str = Form(default="")
+):
     try:
         # Read the uploaded file
         contents = await file.read()
@@ -86,8 +89,8 @@ async def create_upload_file(file: UploadFile = File(...), names: str = "Asim,Su
         # Extract lot numbers and registrations
         registrations = list(zip(df.iloc[:, 0].dropna(), df.iloc[:, 1].dropna()))
 
-        # Convert names to list
-        names_to_check = names.split(',')
+        # Convert names to list (if empty string, use empty list)
+        names_to_check = names.split(',') if names else []
 
         # Get similar registrations using fuzzy matching
         all_comparisons = check_for_similar_names(names_to_check, registrations)

@@ -3,7 +3,10 @@
 import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
+import Cookies from 'js-cookie';
 import styles from './styles/Home.module.css';
+import { COOKIE_KEYS } from '@/constants/cookies';
+import { getCookieOptions } from '@/utils/cookieConfig';
 
 interface Comparison {
   lot_number: string;
@@ -18,9 +21,33 @@ const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState<string>('');
-  const [names, setNames] = useState<string[]>(['Asim', 'Suna', 'Sue', 'Kay', 'Kayhan', 'Kai', 'Niz']);
+  const [names, setNames] = useState<string[]>([]);
   const [data, setData] = useState<Comparison[]>([]);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
+
+  // Load names from cookie on component mount
+  useEffect(() => {
+    const savedNames = Cookies.get(COOKIE_KEYS.REGISTRATION_NAMES);
+    if (savedNames) {
+      try {
+        const parsedNames = JSON.parse(savedNames);
+        setNames(Array.isArray(parsedNames) ? parsedNames : []);
+      } catch (error) {
+        console.error('Error parsing saved names:', error);
+        setNames([]);
+      }
+    }
+  }, []);
+
+  // Save names to cookie whenever they change
+  useEffect(() => {
+    const isDev = process.env.NODE_ENV === 'development';
+    Cookies.set(
+      COOKIE_KEYS.REGISTRATION_NAMES, 
+      JSON.stringify(names),
+      getCookieOptions(isDev)
+    );
+  }, [names]);
 
   useEffect(() => {
     const checkBackendConnection = async () => {
@@ -68,19 +95,37 @@ export default function Home() {
       return;
     }
 
+    if (names.length === 0) {
+      alert('Please add at least one name to check.');
+      return;
+    }
+
+    // Create FormData object
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('names', names.join(','));
+    
+    // Convert array of names to comma-separated string
+    const namesString = names.join(',');
+    formData.append('names', namesString);
 
     try {
+      // Log the form data for debugging
+      console.log('Sending names:', namesString);
+      
       const response = await axios.post(`${backendUrl}/uploadfile/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
+      
       setData(response.data.comparisons);
     } catch (error) {
-      console.error('Error uploading file:', error);
+      // More detailed error logging
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error:', error.response?.data);
+      } else {
+        console.error('Error uploading file:', error);
+      }
       alert('Error uploading file.');
     }
   };
