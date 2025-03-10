@@ -139,3 +139,24 @@
   .downloadButton:hover {
     background-color: #005bb5;
   }
+
+  .connectionIndicator {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
+  
+  .statusDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+  }
+  
+  .connected {
+    background-color: #2ecc71;
+  }
+  
+  .disconnected {
+    background-color: #e74c3c;
+  }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, ChangeEvent, FormEvent } from 'react';
+import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import styles from './styles/Home.module.css';
@@ -13,11 +13,31 @@ interface Comparison {
   similarity: number;
 }
 
+const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState<string>('');
   const [names, setNames] = useState<string[]>(['Asim', 'Suna', 'Sue', 'Kay', 'Kayhan', 'Kai', 'Niz']);
   const [data, setData] = useState<Comparison[]>([]);
+  const [isBackendConnected, setIsBackendConnected] = useState(false);
+
+  useEffect(() => {
+    const checkBackendConnection = async () => {
+      try {
+        await axios.get(`${backendUrl}/health`);
+        setIsBackendConnected(true);
+      } catch (error) {
+        setIsBackendConnected(false);
+      }
+    };
+
+    // Check connection immediately and every 30 seconds
+    checkBackendConnection();
+    const interval = setInterval(checkBackendConnection, 30000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -52,7 +72,7 @@ export default function Home() {
     formData.append('names', names.join(','));
 
     try {
-      const response = await axios.post('http://127.0.0.1:8000/uploadfile/', formData, {
+      const response = await axios.post(`${backendUrl}/uploadfile/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -73,6 +93,9 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
+      <div className={styles.connectionIndicator}>
+        <div className={`${styles.statusDot} ${isBackendConnected ? styles.connected : styles.disconnected}`} />
+      </div>
       <div className={styles.formWrapper}>
         <h1>Registration Name Matcher</h1>
         <form onSubmit={handleSubmit} className={styles.form}>
