@@ -24,6 +24,7 @@ export default function Home() {
   const [names, setNames] = useState<string[]>([]);
   const [data, setData] = useState<Comparison[]>([]);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Load names from cookie on component mount
   useEffect(() => {
@@ -100,33 +101,27 @@ export default function Home() {
       return;
     }
 
-    // Create FormData object
+    setIsLoading(true);
     const formData = new FormData();
     formData.append('file', file);
-    
-    // Convert array of names to comma-separated string
-    const namesString = names.join(',');
-    formData.append('names', namesString);
+    formData.append('names', names.join(','));
 
     try {
-      // Log the form data for debugging
-      console.log('Sending names:', namesString);
-      
       const response = await axios.post(`${backendUrl}/uploadfile/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      
       setData(response.data.comparisons);
     } catch (error) {
-      // More detailed error logging
       if (axios.isAxiosError(error)) {
         console.error('Axios error:', error.response?.data);
       } else {
         console.error('Error uploading file:', error);
       }
       alert('Error uploading file.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -143,7 +138,7 @@ export default function Home() {
         <div className={`${styles.statusDot} ${isBackendConnected ? styles.connected : styles.disconnected}`} />
       </div>
       <div className={styles.formWrapper}>
-        <h1>Registration Name Matcher</h1>
+        <h1 className={styles.mainTitle}>Registration Name Matcher</h1>
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.formGroup}>
             <label>Select Excel File:</label>
@@ -164,12 +159,25 @@ export default function Home() {
               ))}
             </ul>
           </div>
-          <button type="submit" className={styles.submitButton}>Upload and Check</button>
+          <button 
+            type="submit" 
+            className={styles.submitButton}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <span className={styles.loadingWrapper}>
+                <span className={styles.loadingSpinner}></span>
+                Processing...
+              </span>
+            ) : (
+              'Upload and Check'
+            )}
+          </button>
         </form>
       </div>
       {data.length > 0 && (
         <div className={styles.results}>
-          <h2>Results</h2>
+          <h2 className={styles.resultsTitle}>Results</h2>
           <table className={styles.table}>
             <thead>
               <tr>
