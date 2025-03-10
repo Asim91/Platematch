@@ -3,6 +3,7 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
+import styles from './styles/Home.module.css';
 
 interface Comparison {
   lot_number: string;
@@ -14,7 +15,8 @@ interface Comparison {
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
-  const [names, setNames] = useState<string>('Asim,Suna,Sue,Kay,Kayhan,Kai,Niz');
+  const [name, setName] = useState<string>('');
+  const [names, setNames] = useState<string[]>(['Asim', 'Suna', 'Sue', 'Kay', 'Kayhan', 'Kai', 'Niz']);
   const [threshold, setThreshold] = useState<number>(80);
   const [data, setData] = useState<Comparison[]>([]);
 
@@ -24,8 +26,19 @@ export default function Home() {
     }
   };
 
-  const handleNamesChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setNames(e.target.value);
+  const handleNameChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+  };
+
+  const handleAddName = () => {
+    if (name && !names.includes(name)) {
+      setNames([...names, name]);
+      setName('');
+    }
+  };
+
+  const handleRemoveName = (nameToRemove: string) => {
+    setNames(names.filter((n) => n !== nameToRemove));
   };
 
   const handleThresholdChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -41,7 +54,7 @@ export default function Home() {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('names', names);
+    formData.append('names', names.join(','));
     formData.append('threshold', threshold.toString());
 
     try {
@@ -65,27 +78,40 @@ export default function Home() {
   };
 
   return (
-    <div>
-      <h1>Registration Name Matcher</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Select Excel File:</label>
-          <input type="file" onChange={handleFileChange} />
-        </div>
-        <div>
-          <label>Names to Check (comma-separated):</label>
-          <input type="text" value={names} onChange={handleNamesChange} />
-        </div>
-        <div>
-          <label>Similarity Threshold:</label>
-          <input type="number" value={threshold} onChange={handleThresholdChange} />
-        </div>
-        <button type="submit">Upload and Check</button>
-      </form>
+    <div className={styles.container}>
+      <div className={styles.formWrapper}>
+        <h1>Registration Name Matcher</h1>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.formGroup}>
+            <label>Select Excel File:</label>
+            <input type="file" onChange={handleFileChange} />
+          </div>
+          <div className={styles.formGroup}>
+            <label>Add Name to Check:</label>
+            <input type="text" value={name} onChange={handleNameChange} />
+            <button type="button" onClick={handleAddName}>Add</button>
+          </div>
+          <div className={styles.formGroup}>
+            <label>Names to Check:</label>
+            <ul className={styles.nameList}>
+              {names.map((name, index) => (
+                <li key={index}>
+                  {name} <button type="button" onClick={() => handleRemoveName(name)}>Remove</button>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className={styles.formGroup}>
+            <label>Similarity Threshold:</label>
+            <input type="number" value={threshold} onChange={handleThresholdChange} />
+          </div>
+          <button type="submit" className={styles.submitButton}>Upload and Check</button>
+        </form>
+      </div>
       {data.length > 0 && (
-        <div>
+        <div className={styles.results}>
           <h2>Results</h2>
-          <table>
+          <table className={styles.table}>
             <thead>
               <tr>
                 <th>Lot Number</th>
@@ -107,7 +133,7 @@ export default function Home() {
               ))}
             </tbody>
           </table>
-          <button onClick={handleDownload}>Download as Excel</button>
+          <button onClick={handleDownload} className={styles.downloadButton}>Download as Excel</button>
         </div>
       )}
     </div>
