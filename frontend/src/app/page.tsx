@@ -17,7 +17,6 @@ export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState<string>('');
   const [names, setNames] = useState<string[]>(['Asim', 'Suna', 'Sue', 'Kay', 'Kayhan', 'Kai', 'Niz']);
-  const [threshold, setThreshold] = useState<number>(80);
   const [data, setData] = useState<Comparison[]>([]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -41,10 +40,6 @@ export default function Home() {
     setNames(names.filter((n) => n !== nameToRemove));
   };
 
-  const handleThresholdChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setThreshold(Number(e.target.value));
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!file) {
@@ -55,7 +50,6 @@ export default function Home() {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('names', names.join(','));
-    formData.append('threshold', threshold.toString());
 
     try {
       const response = await axios.post('http://127.0.0.1:8000/uploadfile/', formData, {
@@ -100,10 +94,6 @@ export default function Home() {
                 </li>
               ))}
             </ul>
-          </div>
-          <div className={styles.formGroup}>
-            <label>Similarity Threshold:</label>
-            <input type="number" value={threshold} onChange={handleThresholdChange} />
           </div>
           <button type="submit" className={styles.submitButton}>Upload and Check</button>
         </form>

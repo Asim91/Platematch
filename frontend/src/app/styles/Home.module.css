@@ -18,6 +18,10 @@
     text-align: center;
   }
   
+  .formWrapper h1 {
+    color: #333;
+  }
+  
   .form {
     display: flex;
     flex-direction: column;
@@ -32,16 +36,17 @@
   
   .formGroup label {
     margin-bottom: 5px;
+    color: #333;
   }
   
   .formGroup input[type="file"],
-  .formGroup input[type="text"],
-  .formGroup input[type="number"] {
+  .formGroup input[type="text"] {
     padding: 10px;
     width: 100%;
     max-width: 300px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    color: #333;
   }
   
   .formGroup button {
@@ -68,6 +73,7 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 5px;
+    color: #333;
   }
   
   .nameList button {
@@ -113,6 +119,7 @@
     border: 1px solid black;
     padding: 10px;
     text-align: left;
+    color: #333;
   }
   
   .table th {

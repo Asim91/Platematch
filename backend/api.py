@@ -38,7 +38,7 @@ def normalize_text(text):
         normalized.append(substitution_map.get(char, char))
     return ''.join(normalized)
 
-def check_for_similar_names(names, registrations, threshold=80):
+def check_for_similar_names(names, registrations):
     """
     Check if any registration plate (normalized) is a close fuzzy match
     to any of the given names (also normalized), using fuzzy matching.
@@ -63,7 +63,7 @@ def check_for_similar_names(names, registrations, threshold=80):
     return all_comparisons
 
 @app.post("/uploadfile/")
-async def create_upload_file(file: UploadFile = File(...), names: str = "Asim,Suna,Sue,Kay,Kayhan,Kai,Niz", threshold: int = 80):
+async def create_upload_file(file: UploadFile = File(...), names: str = "Asim,Suna,Sue,Kay,Kayhan,Kai,Niz"):
     try:
         # Read the uploaded file
         contents = await file.read()
@@ -76,7 +76,7 @@ async def create_upload_file(file: UploadFile = File(...), names: str = "Asim,Su
         names_to_check = names.split(',')
 
         # Get similar registrations using fuzzy matching
-        all_comparisons = check_for_similar_names(names_to_check, registrations, threshold)
+        all_comparisons = check_for_similar_names(names_to_check, registrations)
 
         return JSONResponse(content={"comparisons": all_comparisons})
     except Exception as e:
