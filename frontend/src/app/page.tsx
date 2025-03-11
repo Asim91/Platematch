@@ -147,6 +147,13 @@ export default function Home() {
     XLSX.writeFile(workbook, 'comparisons.xlsx');
   };
 
+  const handlePageSizeChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    setPagination(prev => ({
+      ...prev,
+      pageSize: Number(e.target.value),
+    }));
+  };
+
   const columnHelper = createColumnHelper<Comparison>();
 
   const columns = useMemo(() => [
@@ -237,6 +244,18 @@ export default function Home() {
         <div className={styles.results}>
           <h2 className={styles.resultsTitle}>Results</h2>
           <div className={styles.tableContainer}>
+            <div className={styles.tableControls}>
+              <label>
+                Show 
+                <select value={pagination.pageSize} onChange={handlePageSizeChange}>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                entries
+              </label>
+            </div>
             <table className={styles.table}>
               <thead>
                 {table.getHeaderGroups().map(headerGroup => (

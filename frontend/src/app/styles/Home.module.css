@@ -121,6 +121,24 @@
   position: relative;
 }
 
+.tableControls {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+
+.tableControls label {
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.tableControls select {
+  margin-left: 5px;
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
