@@ -1,9 +1,17 @@
 'use client';
 
-import { useState, useEffect, ChangeEvent, FormEvent } from 'react';
+import { useState, useEffect, ChangeEvent, FormEvent, useMemo } from 'react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import Cookies from 'js-cookie';
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  getSortedRowModel,
+  SortingState,
+} from '@tanstack/react-table';
 import styles from './styles/Home.module.css';
 import { COOKIE_KEYS } from '@/constants/cookies';
 import { getCookieOptions } from '@/utils/cookieConfig';
@@ -25,6 +33,7 @@ export default function Home() {
   const [data, setData] = useState<Comparison[]>([]);
   const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   // Load names from cookie on component mount
   useEffect(() => {
@@ -132,6 +141,46 @@ export default function Home() {
     XLSX.writeFile(workbook, 'comparisons.xlsx');
   };
 
+  const columnHelper = createColumnHelper<Comparison>();
+
+  const columns = useMemo(() => [
+    columnHelper.accessor('lot_number', {
+      header: 'Lot Number',
+      cell: info => info.getValue(),
+    }),
+    columnHelper.accessor('name', {
+      header: 'Name',
+      cell: info => info.getValue(),
+    }),
+    columnHelper.accessor('registration', {
+      header: 'Registration',
+      cell: info => (
+        <span className={styles.registration}>
+          {info.getValue()}
+        </span>
+      ),
+    }),
+    columnHelper.accessor('normalized_registration', {
+      header: 'Normalized Registration',
+      cell: info => info.getValue(),
+    }),
+    columnHelper.accessor('similarity', {
+      header: 'Similarity',
+      cell: info => info.getValue(),
+    }),
+  ], []);
+
+  const table = useReactTable({
+    data,
+    columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
   return (
     <div className={styles.container}>
       <div className={styles.connectionIndicator}>
@@ -180,27 +229,44 @@ export default function Home() {
           <h2 className={styles.resultsTitle}>Results</h2>
           <table className={styles.table}>
             <thead>
-              <tr>
-                <th>Lot Number</th>
-                <th>Name</th>
-                <th>Registration</th>
-                <th>Normalized Registration</th>
-                <th>Similarity</th>
-              </tr>
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map(header => (
+                    <th
+                      key={header.id}
+                      onClick={header.column.getToggleSortingHandler()}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                      {
+                        {
+                          asc: ' 🔼',
+                          desc: ' 🔽',
+                        }[header.column.getIsSorted() as string] ?? null
+                      }
+                    </th>
+                  ))}
+                </tr>
+              ))}
             </thead>
             <tbody>
-              {data.map((item, index) => (
-                <tr key={index}>
-                  <td>{item.lot_number}</td>
-                  <td>{item.name}</td>
-                  <td>{item.registration}</td>
-                  <td>{item.normalized_registration}</td>
-                  <td>{item.similarity}</td>
+              {table.getRowModel().rows.map(row => (
+                <tr key={row.id}>
+                  {row.getVisibleCells().map(cell => (
+                    <td key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
           </table>
-          <button onClick={handleDownload} className={styles.downloadButton}>Download as Excel</button>
+          <button onClick={handleDownload} className={styles.downloadButton}>
+            Download as Excel
+          </button>
         </div>
       )}
     </div>

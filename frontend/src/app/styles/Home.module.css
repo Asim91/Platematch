@@ -123,14 +123,35 @@
   
   .table th,
   .table td {
-    border: 1px solid black;
-    padding: 10px;
+    border: 1px solid #ddd;
+    padding: 8px;
     text-align: left;
-    color: #333;
+    font-family: Arial, sans-serif; /* Ensure consistent font */
+    font-size: 14px; /* Adjust font size for readability */
+    color: #000; /* Ensure text color is black */
   }
   
   .table th {
     background-color: #f2f2f2;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+  }
+
+  .table th:hover {
+    background-color: #e5e5e5;
+  }
+
+  .table th span {
+    margin-left: 5px;
+  }
+
+  .table tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+
+  .table tr:hover {
+    background-color: #f1f1f1;
   }
   
   .downloadButton {
@@ -208,4 +229,14 @@
   @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+  }
+
+  .registration {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #f1c40f;
+    border: 2px solid #e67e22;
+    border-radius: 4px;
+    font-weight: bold;
+    color: #2c3e50;
   }
