@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 import pandas as pd
 from fuzzywuzzy import fuzz
 import io
-from app.routes.scraper import router as scraper_router  # Import the router
+from app.routes.scraper import router as scraper_router, scrape_auction_data  # Import the router and function
 
 app = FastAPI()
 
@@ -107,6 +107,34 @@ async def create_upload_file(
 async def health_check():
     return {"status": "ok"}
 
-# Include the scraper router
-app.include_router(scraper_router, prefix="/api")
+@router.get("/scrape/{auction_id}")
+async def scrape_auction(auction_id: str, names: str):
+    try:
+        # Scrape auction data
+        auction_data = await scrape_auction_data(auction_id)
+        
+        # Convert names to list (if empty string, use empty list)
+        names_to_check = names.split(',') if names else []
+
+        # Get similar registrations using fuzzy matching
+        registrations = [(item["lot_number"], item["registration"]) for item in auction_data]
+        all_comparisons = check_for_similar_names(names_to_check, registrations)
+
+        # # Include additional information in the response
+        # for comparison in all_comparisons:
+        #     for item in auction_data:
+        #         if comparison["lot_number"] == item["lot_number"]:
+        #             comparison.update({
+        #                 "reserve_price": item["reserve_price"],
+        #                 "current_price": item["current_price"],
+        #                 "end_time": item["end_time"],
+        #                 "lot_url": item["lot_url"],
+        #             })
+
+        return JSONResponse(content={"comparisons": all_comparisons})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Include the scraper router with a prefix to avoid conflicts
+app.include_router(scraper_router, prefix="/api/scraper")
 app.include_router(router, prefix="/api")

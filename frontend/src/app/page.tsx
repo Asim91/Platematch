@@ -24,15 +24,10 @@ interface Comparison {
   registration: string;
   normalized_registration: string;
   similarity: number;
-}
-
-interface AuctionData {
-  lotNumber: string;
-  registration: string;
-  reservePrice: string;
-  currentPrice: string;
-  endTime: string;
-  lotUrl: string;
+  // reserve_price?: string;
+  // current_price?: string;
+  // end_time?: string;
+  // lot_url?: string;
 }
 
 const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
@@ -79,7 +74,7 @@ export default function Home() {
   useEffect(() => {
     const checkBackendConnection = async () => {
       try {
-        await axios.get(`${backendUrl}/health`);
+        await axios.get(`${backendUrl}/api/health`);
         setIsBackendConnected(true);
       } catch (error) {
         console.error('Backend connection failed:', error);
@@ -133,7 +128,7 @@ export default function Home() {
     formData.append('names', names.join(','));
 
     try {
-      const response = await axios.post(`${backendUrl}/uploadfile/`, formData, {
+      const response = await axios.post(`${backendUrl}/api/uploadfile/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -181,15 +176,22 @@ export default function Home() {
 
     setIsLoading(true);
     try {
-      const response = await axios.get<AuctionData[]>(`${backendUrl}/api/scrape/${auctionId}`);
-      const auctionData = response.data;
+      const response = await axios.get(`${backendUrl}/api/scrape/${auctionId}`, {
+        params: { names: names.join(',') }
+      });
+      const auctionData = response.data.comparisons;
       console.log('Scraped data:', auctionData); // Debug message
-      setData(auctionData.map((item: AuctionData) => ({
-        lot_number: item.lotNumber,
-        name: item.registration,
+      setData(auctionData.map((item: Comparison) => ({
+        lot_number: item.lot_number,
+        name: item.name,
         registration: item.registration,
-        normalized_registration: item.registration,
-        similarity: 0, // Set similarity to 0 as it's not available from the scraped data
+        normalized_registration: item.normalized_registration,
+        similarity: item.similarity
+        // ,
+        // reserve_price: item.reserve_price,
+        // current_price: item.current_price,
+        // end_time: item.end_time,
+        // lot_url: item.lot_url,
       })));
     } catch (error) {
       console.error('Error scraping auction data:', error);
