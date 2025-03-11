@@ -1,242 +1,307 @@
 .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 20px;
-    background-color: #f0f4f8;
-  }
-  
-  .formWrapper {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    max-width: 500px;
-    width: 100%;
-    text-align: center;
-  }
-  
-  .formWrapper h1 {
-    color: #333;
-  }
-  
-  .form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .formGroup {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  .formGroup label {
-    margin-bottom: 5px;
-    color: #333;
-  }
-  
-  .formGroup input[type="file"],
-  .formGroup input[type="text"] {
-    padding: 10px;
-    width: 100%;
-    max-width: 300px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    color: #333;
-  }
-  
-  .formGroup button {
-    margin-top: 5px;
-    padding: 10px 20px;
-    background-color: #0070f3;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .formGroup button:hover {
-    background-color: #005bb5;
-  }
-  
-  .nameList {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .nameList li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-    color: #333;
-  }
-  
-  .nameList button {
-    background-color: #ff4d4d;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    padding: 5px 10px;
-  }
-  
-  .nameList button:hover {
-    background-color: #cc0000;
-  }
-  
-  .submitButton {
-    padding: 10px 20px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    min-width: 150px;
-    position: relative;
-  }
-  
-  .submitButton:hover {
-    background-color: #218838;
-  }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  background-color: #f0f4f8;
+}
 
-  .submitButton:disabled {
-    background-color: #94a3b8;
-    cursor: not-allowed;
-  }
-  
-  .results {
-    margin-top: 20px;
-    width: 100%;
-    max-width: 800px;
-  }
-  
-  .table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-  }
-  
-  .table th,
-  .table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-    font-family: Arial, sans-serif; /* Ensure consistent font */
-    font-size: 14px; /* Adjust font size for readability */
-    color: #000; /* Ensure text color is black */
-  }
-  
-  .table th {
-    background-color: #f2f2f2;
-    cursor: pointer;
-    user-select: none;
-    position: relative;
-  }
+.formWrapper {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+}
 
-  .table th:hover {
-    background-color: #e5e5e5;
-  }
+.formWrapper h1 {
+  color: #333;
+}
 
-  .table th span {
-    margin-left: 5px;
-  }
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
 
-  .table tr:nth-child(even) {
-    background-color: #f9f9f9;
-  }
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-  .table tr:hover {
-    background-color: #f1f1f1;
-  }
-  
-  .downloadButton {
-    margin-top: 10px;
-    padding: 10px 20px;
-    background-color: #0070f3;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .downloadButton:hover {
-    background-color: #005bb5;
-  }
+.formGroup label {
+  margin-bottom: 5px;
+  color: #333;
+}
 
-  .connectionIndicator {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-  }
-  
-  .statusDot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    transition: background-color 0.3s ease;
-  }
-  
-  .connected {
-    background-color: #2ecc71;
-  }
-  
-  .disconnected {
-    background-color: #e74c3c;
-  }
+.formGroup input[type="file"],
+.formGroup input[type="text"] {
+  padding: 10px;
+  width: 100%;
+  max-width: 300px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #333;
+}
 
-  .mainTitle {
-    color: #2c3e50;
-    font-size: 2rem;
-    margin-bottom: 2rem;
-    font-weight: 600;
-    text-align: center;
-    border-bottom: 2px solid #3498db;
-    padding-bottom: 0.5rem;
-  }
-  
-  .resultsTitle {
-    color: #2c3e50;
-    font-size: 1.5rem;
-    margin: 1.5rem 0;
-    font-weight: 500;
-    text-align: center;
-    background: #f8f9fa;
-    padding: 0.5rem;
-    border-radius: 4px;
-  }
-  
-  .loadingWrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-  }
-  
-  .loadingSpinner {
-    width: 20px;
-    height: 20px;
-    border: 3px solid #ffffff;
-    border-top: 3px solid transparent;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-  
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
+.formGroup button {
+  margin-top: 5px;
+  padding: 10px 20px;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
 
-  .registration {
-    display: inline-block;
-    padding: 5px 10px;
-    background-color: #f1c40f;
-    border: 2px solid #e67e22;
-    border-radius: 4px;
-    font-weight: bold;
-    color: #2c3e50;
-  }
+.formGroup button:hover {
+  background-color: #005bb5;
+}
+
+.nameList {
+  list-style-type: none;
+  padding: 0;
+}
+
+.nameList li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.nameList button {
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.nameList button:hover {
+  background-color: #cc0000;
+}
+
+.submitButton {
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  min-width: 150px;
+  position: relative;
+}
+
+.submitButton:hover {
+  background-color: #218838;
+}
+
+.submitButton:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.results {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.tableContainer {
+  height: auto;
+  overflow: hidden;
+  position: relative;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.table th,
+.table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+  font-family: Arial, sans-serif; /* Ensure consistent font */
+  font-size: 14px; /* Adjust font size for readability */
+  color: #000; /* Ensure text color is black */
+}
+
+.table th {
+  background-color: #f2f2f2;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.table th:hover {
+  background-color: #e5e5e5;
+}
+
+.table th span {
+  margin-left: 5px;
+}
+
+.table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.table tr:hover {
+  background-color: #f1f1f1;
+}
+
+.downloadButton {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.downloadButton:hover {
+  background-color: #005bb5;
+}
+
+.connectionIndicator {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.statusDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: background-color 0.3s ease;
+}
+
+.connected {
+  background-color: #2ecc71;
+}
+
+.disconnected {
+  background-color: #e74c3c;
+}
+
+.mainTitle {
+  color: #2c3e50;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  font-weight: 600;
+  text-align: center;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 0.5rem;
+}
+
+.resultsTitle {
+  color: #2c3e50;
+  font-size: 1.5rem;
+  margin: 1.5rem 0;
+  font-weight: 500;
+  text-align: center;
+  background: #f8f9fa;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.loadingWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.loadingSpinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #ffffff;
+  border-top: 3px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.registration {
+  display: inline-block;
+  width: 160px;
+  height: 46.2812px;
+  padding: 5px 0;
+  margin: 0 auto; /* Center the element horizontally */
+  box-sizing: border-box;
+  background-color: rgb(254, 207, 63); /* yellow */
+  border: 1px solid rgb(0, 0, 0); /* black solid border */
+  color: rgb(0, 0, 0); /* black text color */
+  text-align: center;
+  line-height: 36.2812px; /* Adjust line-height to vertically center the text */
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 10px;
+  font-weight: bold;
+  color: #333; /* Darker font color */
+  position: relative;
+}
+
+.pagination button {
+  padding: 5px 10px;
+  margin: 0 5px;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  margin: 0 5px;
+}
+
+.table td .field-name.data-text a {
+  width: 160px;
+  height: 46.2812px;
+  padding: 5px 0;
+  margin: 0 auto; /* Center the element horizontally */
+  box-sizing: border-box;
+  display: block;
+  background-color: rgb(254, 207, 63); /* yellow */
+  border: 1px solid rgb(0, 0, 0); /* black solid border */
+  color: rgb(0, 0, 0); /* black text color */
+  text-align: center;
+  line-height: 36.2812px; /* Adjust line-height to vertically center the text */
+  font-weight: bold;
+  border-radius: 4px;
+}
+
+.entriesCount {
+  font-size: 0.9rem;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+  color: #333;
+}

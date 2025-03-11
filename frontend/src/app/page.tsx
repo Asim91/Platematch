@@ -10,7 +10,9 @@ import {
   getCoreRowModel,
   useReactTable,
   getSortedRowModel,
+  getPaginationRowModel,
   SortingState,
+  PaginationState,
 } from '@tanstack/react-table';
 import styles from './styles/Home.module.css';
 import { COOKIE_KEYS } from '@/constants/cookies';
@@ -34,6 +36,10 @@ export default function Home() {
   const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
   // Load names from cookie on component mount
   useEffect(() => {
@@ -168,17 +174,20 @@ export default function Home() {
       header: 'Similarity',
       cell: info => info.getValue(),
     }),
-  ], []);
+  ], [columnHelper]);
 
   const table = useReactTable({
     data,
     columns,
     state: {
       sorting,
+      pagination,
     },
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   return (
@@ -227,43 +236,69 @@ export default function Home() {
       {data.length > 0 && (
         <div className={styles.results}>
           <h2 className={styles.resultsTitle}>Results</h2>
-          <table className={styles.table}>
-            <thead>
-              {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map(header => (
-                    <th
-                      key={header.id}
-                      onClick={header.column.getToggleSortingHandler()}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                {table.getHeaderGroups().map(headerGroup => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map(header => (
+                      <th
+                        key={header.id}
+                        onClick={header.column.getToggleSortingHandler()}
+                        style={{ cursor: 'pointer' }}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                         {
-                          asc: ' 🔼',
-                          desc: ' 🔽',
-                        }[header.column.getIsSorted() as string] ?? null
-                      }
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {table.getRowModel().rows.map(row => (
-                <tr key={row.id}>
-                  {row.getVisibleCells().map(cell => (
-                    <td key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                          {
+                            asc: ' 🔼',
+                            desc: ' 🔽',
+                          }[header.column.getIsSorted() as string] ?? null
+                        }
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody>
+                {table.getRowModel().rows.map(row => (
+                  <tr key={row.id}>
+                    {row.getVisibleCells().map(cell => (
+                      <td key={cell.id} className="field-name data-text">
+                        <a href="#">{flexRender(cell.column.columnDef.cell, cell.getContext())}</a>
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className={styles.pagination}>
+              <div className={styles.entriesCount}>
+                {`Entries returned: ${data.length}`}
+              </div>
+              <button
+                onClick={() => table.previousPage()}
+                disabled={!table.getCanPreviousPage()}
+              >
+                &lt;
+              </button>
+              <span>
+                Page{' '}
+                <strong>
+                  {table.getState().pagination.pageIndex + 1} of{' '}
+                  {table.getPageCount()}
+                </strong>{' '}
+              </span>
+              <button
+                onClick={() => table.nextPage()}
+                disabled={!table.getCanNextPage()}
+              >
+                &gt;
+              </button>
+            </div>
+          </div>
           <button onClick={handleDownload} className={styles.downloadButton}>
             Download as Excel
           </button>

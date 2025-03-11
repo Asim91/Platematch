@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tanstack/react-table": "^8.21.2",
+    "@tanstack/react-virtual": "^3.13.2",
     "@types/js-cookie": "^3.0.6",
     "axios": "^1.8.2",
     "js-cookie": "^3.0.5",
