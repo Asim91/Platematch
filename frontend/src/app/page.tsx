@@ -40,6 +40,7 @@ export default function Home() {
     pageIndex: 0,
     pageSize: 10,
   });
+  const [selectedName, setSelectedName] = useState<string>('All');
 
   // Load names from cookie on component mount
   useEffect(() => {
@@ -154,6 +155,17 @@ export default function Home() {
     }));
   };
 
+  const handleNameFilterChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    setSelectedName(e.target.value);
+  };
+
+  const filteredData = useMemo(() => {
+    if (selectedName === 'All') {
+      return data;
+    }
+    return data.filter(item => item.name === selectedName);
+  }, [data, selectedName]);
+
   const columnHelper = createColumnHelper<Comparison>();
 
   const columns = useMemo(() => [
@@ -184,7 +196,7 @@ export default function Home() {
   ], [columnHelper]);
 
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: {
       sorting,
@@ -254,6 +266,15 @@ export default function Home() {
                   <option value={100}>100</option>
                 </select>
                 entries
+              </label>
+              <label>
+                Filter by Name
+                <select value={selectedName} onChange={handleNameFilterChange}>
+                  <option value="All">All</option>
+                  {names.map((name, index) => (
+                    <option key={index} value={name}>{name}</option>
+                  ))}
+                </select>
               </label>
             </div>
             <table className={styles.table}>
