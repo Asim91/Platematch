@@ -26,6 +26,15 @@ interface Comparison {
   similarity: number;
 }
 
+interface AuctionData {
+  lotNumber: string;
+  registration: string;
+  reservePrice: string;
+  currentPrice: string;
+  endTime: string;
+  lotUrl: string;
+}
+
 const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
 
 export default function Home() {
@@ -41,6 +50,7 @@ export default function Home() {
     pageSize: 10,
   });
   const [selectedName, setSelectedName] = useState<string>('All');
+  const [auctionId, setAuctionId] = useState<string>('');
 
   // Load names from cookie on component mount
   useEffect(() => {
@@ -159,6 +169,36 @@ export default function Home() {
     setSelectedName(e.target.value);
   };
 
+  const handleAuctionIdChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setAuctionId(e.target.value);
+  };
+
+  const handleScrape = async () => {
+    if (!auctionId) {
+      alert('Please enter an auction ID.');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await axios.get<AuctionData[]>(`${backendUrl}/api/scrape/${auctionId}`);
+      const auctionData = response.data;
+      console.log('Scraped data:', auctionData); // Debug message
+      setData(auctionData.map((item: AuctionData) => ({
+        lot_number: item.lotNumber,
+        name: item.registration,
+        registration: item.registration,
+        normalized_registration: item.registration,
+        similarity: 0, // Set similarity to 0 as it's not available from the scraped data
+      })));
+    } catch (error) {
+      console.error('Error scraping auction data:', error);
+      alert('Error scraping auction data.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const filteredData = useMemo(() => {
     if (selectedName === 'All') {
       return data;
@@ -251,6 +291,11 @@ export default function Home() {
             )}
           </button>
         </form>
+        <div className={styles.formGroup}>
+          <label>Enter Auction ID to Scrape:</label>
+          <input type="text" value={auctionId} onChange={handleAuctionIdChange} />
+          <button type="button" onClick={handleScrape}>Scrape</button>
+        </div>
       </div>
       {data.length > 0 && (
         <div className={styles.results}>

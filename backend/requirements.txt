@@ -2,6 +2,8 @@ fastapi
 uvicorn
 pandas
 fuzzywuzzy
+httpx
+beautifulsoup4
 python-Levenshtein
 python-multipart
 openpyxl

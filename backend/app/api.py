@@ -1,10 +1,11 @@
 import os
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form
+from fastapi import FastAPI, APIRouter, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import pandas as pd
 from fuzzywuzzy import fuzz
 import io
+from app.routes.scraper import router as scraper_router  # Import the router
 
 app = FastAPI()
 
@@ -19,6 +20,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Create a new router
+router = APIRouter()
 
 # Mapping for common number-to-letter substitutions
 substitution_map = {
@@ -76,7 +80,7 @@ def check_for_similar_names(names, registrations):
             })
     return all_comparisons
 
-@app.post("/uploadfile/")
+@router.post("/uploadfile/")
 async def create_upload_file(
     file: UploadFile = File(...),
     names: str = Form(default="")
@@ -99,6 +103,10 @@ async def create_upload_file(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@app.get("/health")
+@router.get("/health")
 async def health_check():
     return {"status": "ok"}
+
+# Include the scraper router
+app.include_router(scraper_router, prefix="/api")
+app.include_router(router, prefix="/api")
