@@ -74,7 +74,7 @@ export default function Home() {
   useEffect(() => {
     const checkBackendConnection = async () => {
       try {
-        await axios.get(`${backendUrl}/api/health`);
+        await axios.get(`${backendUrl}/health`); 
         setIsBackendConnected(true);
       } catch (error) {
         console.error('Backend connection failed:', error);
@@ -128,7 +128,7 @@ export default function Home() {
     formData.append('names', names.join(','));
 
     try {
-      const response = await axios.post(`${backendUrl}/api/uploadfile/`, formData, {
+      const response = await axios.post(`${backendUrl}/uploadfile/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -176,7 +176,7 @@ export default function Home() {
 
     setIsLoading(true);
     try {
-      const response = await axios.get(`${backendUrl}/api/scrape/${auctionId}`, {
+      const response = await axios.get(`${backendUrl}/scrape/${auctionId}`, {
         params: { names: names.join(',') }
       });
       const auctionData = response.data.comparisons;

@@ -141,6 +141,6 @@ async def scrape_auction(auction_id: str, names: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Include the scraper router with a prefix to avoid conflicts
-app.include_router(scraper_router, prefix="/api/scraper")
-app.include_router(router, prefix="/api")
+# Update routes without /api prefix since we're using api.a51m.xyz
+app.include_router(router)  # Remove /api prefix
+app.include_router(scraper_router)  # Remove /api/scraper prefix
