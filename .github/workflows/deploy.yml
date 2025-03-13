@@ -3,7 +3,7 @@ name: Deploy to Google Cloud Run
 on:
   push:
     branches:
-      - master  
+      - master  # This will trigger the workflow on the 'master' branch
 
 jobs:
   deploy:
@@ -28,16 +28,34 @@ jobs:
         run: |
           gcloud auth configure-docker
 
-      - name: Build and push Docker image
+      # Build and push backend Docker image
+      - name: Build and push backend Docker image
         run: |
-          IMAGE_NAME=gcr.io/platematch/platematch
-          docker build -t $IMAGE_NAME .
+          IMAGE_NAME=gcr.io/platematch/backend
+          docker build -t $IMAGE_NAME -f backend/Dockerfile backend/
           docker push $IMAGE_NAME
 
-      - name: Deploy to Cloud Run
+      # Build and push frontend Docker image
+      - name: Build and push frontend Docker image
         run: |
-          gcloud run deploy YOUR_SERVICE_NAME \
-            --image gcr.io/platematch/platematch \
-            --region europe-west10 \
+          IMAGE_NAME=gcr.io/platematch/frontend
+          docker build -t $IMAGE_NAME -f frontend/Dockerfile frontend/
+          docker push $IMAGE_NAME
+
+      # Deploy backend to Cloud Run
+      - name: Deploy backend to Cloud Run
+        run: |
+          gcloud run deploy backend-service \
+            --image gcr.io/platematch/backend \
+            --region europe-west1 \
+            --platform managed \
+            --allow-unauthenticated
+
+      # Deploy frontend to Cloud Run
+      - name: Deploy frontend to Cloud Run
+        run: |
+          gcloud run deploy frontend-service \
+            --image gcr.io/platematch/frontend \
+            --region europe-west1 \
             --platform managed \
             --allow-unauthenticated
