@@ -13,6 +13,7 @@ This directory contains YAML configuration files for Google Cloud Run services.
 ## Service Files
 - `backend-service.yaml`: Backend service configuration
 - `frontend-service.yaml`: Frontend service configuration
+- `policy.yaml`: IAM policy configuration for public access
 
 ## Applying Configuration Changes
 
@@ -59,4 +60,14 @@ gcloud run services describe platematch-backend --region=europe-west1
 
 # View frontend configuration
 gcloud run services describe platematch-frontend --region=europe-west1
+```
+
+## Setting Up Public Access
+```powershell
+# Navigate to deployment directory
+cd c:\Development\RegName Matcher\deployment
+
+# Apply IAM policy to both services
+gcloud run services set-iam-policy platematch-backend policy.yaml --region=europe-west1
+gcloud run services set-iam-policy platematch-frontend policy.yaml --region=europe-west1
 ```

@@ -4,6 +4,9 @@ metadata:
   name: platematch-backend
 spec:
   template:
+    metadata:
+      annotations:
+        run.googleapis.com/ingress: all
     spec:
       containers:
       - image: gcr.io/platematch/backend

@@ -66,3 +66,9 @@ jobs:
           FRONTEND_URL=$(gcloud run services describe platematch-frontend --region=europe-west1 --format='value(status.url)')
           sed -i "s#value: \"https://.*\"#value: \"$FRONTEND_URL\"#" deployment/backend-service.yaml
           gcloud run services replace deployment/backend-service.yaml --region=europe-west1
+
+      # Set IAM policies for public access
+      - name: Configure public access
+        run: |
+          gcloud run services set-iam-policy platematch-backend deployment/policy.yaml --region=europe-west1
+          gcloud run services set-iam-policy platematch-frontend deployment/policy.yaml --region=europe-west1
