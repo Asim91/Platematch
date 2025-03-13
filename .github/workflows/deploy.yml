@@ -38,6 +38,6 @@ jobs:
         run: |
           gcloud run deploy YOUR_SERVICE_NAME \
             --image gcr.io/platematch/platematch \
-            --region YOUR_REGION \
+            --region europe-west10 \
             --platform managed \
             --allow-unauthenticated
