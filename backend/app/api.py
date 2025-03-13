@@ -11,20 +11,21 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-app = FastAPI()
-
 # Get configuration from environment variables
 HOST = os.getenv('HOST', '0.0.0.0')
-PORT = int(os.getenv('PORT', 8000))
-CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000').split(',')
+PORT = int(os.getenv('PORT', 8080))
+CORS_ORIGINS = os.getenv('CORS_ORIGINS', '').split(',')
+
+app = FastAPI()
 
 # Configure CORS with more specific settings
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
-    allow_headers=["*"]
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+    max_age=3600
 )
 
 # Create a new router
@@ -140,6 +141,10 @@ async def scrape_auction(auction_id: str, names: str):
         return JSONResponse(content={"comparisons": all_comparisons})
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/")
+async def root():
+    return {"message": "Welcome to Plate Matcher API"}
 
 # Update routes without /api prefix since we're using api.a51m.xyz
 app.include_router(router)  # Remove /api prefix

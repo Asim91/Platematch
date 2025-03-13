@@ -38,37 +38,58 @@ jobs:
       # Build and push frontend Docker image
       - name: Build and push frontend Docker image
         run: |
+          BACKEND_URL=$(gcloud run services describe platematch-backend --region=europe-west1 --format='value(status.url)')
+          echo "Building frontend with BACKEND_URL: $BACKEND_URL"
           IMAGE_NAME=gcr.io/platematch/frontend
-          docker build -t $IMAGE_NAME -f frontend/Dockerfile frontend/
+          docker build \
+            --build-arg NEXT_PUBLIC_BACKEND_URL=$BACKEND_URL \
+            -t $IMAGE_NAME \
+            -f frontend/Dockerfile frontend/
           docker push $IMAGE_NAME
 
       # Deploy backend using service configuration
       - name: Deploy backend to Cloud Run
         run: |
-          BACKEND_URL=$(gcloud run services replace deployment/backend-service.yaml --region=europe-west1 --format='value(status.url)')
+          # Deploy backend first to get its URL
+          BACKEND_URL=$(gcloud run services replace deployment/platematch-backend.yaml --region=europe-west1 --format='value(status.url)')
           echo "Backend URL: $BACKEND_URL"
 
       # Update frontend configuration with backend URL
       - name: Update frontend configuration
         run: |
+          # Get backend URL from deployed service
           BACKEND_URL=$(gcloud run services describe platematch-backend --region=europe-west1 --format='value(status.url)')
-          sed -i "s#value: \"https://.*\"#value: \"$BACKEND_URL\"#" deployment/frontend-service.yaml
+          echo "Setting frontend to use backend URL: $BACKEND_URL"
+          # Update frontend service configuration
+          sed -i "s#value: \"https://.*\"#value: \"$BACKEND_URL\"#" deployment/platematch-frontend.yaml
 
       # Deploy frontend using service configuration
       - name: Deploy frontend to Cloud Run
         run: |
-          FRONTEND_URL=$(gcloud run services replace deployment/frontend-service.yaml --region=europe-west1 --format='value(status.url)')
+          FRONTEND_URL=$(gcloud run services replace deployment/platematch-frontend.yaml --region=europe-west1 --format='value(status.url)')
           echo "Frontend URL: $FRONTEND_URL"
 
-      # Update backend configuration with frontend URL
+      # Update backend CORS configuration
       - name: Update backend configuration
         run: |
+          # Get actual frontend URL from service
           FRONTEND_URL=$(gcloud run services describe platematch-frontend --region=europe-west1 --format='value(status.url)')
-          sed -i "s#value: \"https://.*\"#value: \"$FRONTEND_URL\"#" deployment/backend-service.yaml
-          gcloud run services replace deployment/backend-service.yaml --region=europe-west1
+          # Update backend CORS configuration
+          sed -i "s#value: \"CORS_ORIGINS=.*\"#value: \"CORS_ORIGINS=$FRONTEND_URL\"#" deployment/platematch-backend.yaml
+          # Redeploy backend with updated CORS
+          gcloud run services replace deployment/platematch-backend.yaml --region=europe-west1
 
       # Set IAM policies for public access
       - name: Configure public access
         run: |
           gcloud run services set-iam-policy platematch-backend deployment/policy.yaml --region=europe-west1
           gcloud run services set-iam-policy platematch-frontend deployment/policy.yaml --region=europe-west1
+
+      # Add environment verification step
+      - name: Verify Service Configuration
+        run: |
+          echo "Backend Configuration:"
+          gcloud run services describe platematch-backend --region=europe-west1 --format='yaml(spec.template.spec.containers[0].env)'
+          
+          echo "\nFrontend Configuration:"
+          gcloud run services describe platematch-frontend --region=europe-west1 --format='yaml(spec.template.spec.containers[0].env)'

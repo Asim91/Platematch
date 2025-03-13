@@ -12,9 +12,9 @@ RUN npm install
 # Copy the current directory contents into the container at /app
 COPY . .
 
-# Add build argument for backend URL
-ARG BACKEND_URL
-ENV NEXT_PUBLIC_BACKEND_URL=${BACKEND_URL:-http://localhost:8080}
+# Add build argument for backend URL with default for local development
+ARG NEXT_PUBLIC_BACKEND_URL
+ENV NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
 
 # Build the app
 RUN npm run build
