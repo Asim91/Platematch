@@ -1,0 +1,18 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: platematch-frontend
+spec:
+  template:
+    spec:
+      containers:
+      - image: gcr.io/platematch/frontend
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NEXT_PUBLIC_BACKEND_URL
+          value: "https://backend-service-5memnnzqha-ew.a.run.app"  # Replace with actual backend URL after deployment
+        resources:
+          limits:
+            cpu: "1"
+            memory: "512Mi"

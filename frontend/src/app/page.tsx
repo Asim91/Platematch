@@ -30,7 +30,7 @@ interface Comparison {
   // lot_url?: string;
 }
 
-const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);

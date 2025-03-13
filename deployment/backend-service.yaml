@@ -1,0 +1,20 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: platematch-backend
+spec:
+  template:
+    spec:
+      containers:
+      - image: gcr.io/platematch/backend
+        ports:
+        - containerPort: 8080
+        env:
+        - name: CORS_ORIGINS
+          value: "https://frontend-service-5memnnzqha-ew.a.run.app"  
+        - name: HOST
+          value: "0.0.0.0"
+        resources:
+          limits:
+            cpu: "1"
+            memory: "512Mi"

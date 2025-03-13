@@ -6,16 +6,22 @@ import pandas as pd
 from fuzzywuzzy import fuzz
 import io
 from app.routes.scraper import router as scraper_router, scrape_auction_data  # Import the router and function
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = FastAPI()
 
-# Get CORS origins from environment variable or use default
-origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+# Get configuration from environment variables
+HOST = os.getenv('HOST', '0.0.0.0')
+PORT = int(os.getenv('PORT', 8000))
+CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000').split(',')
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
