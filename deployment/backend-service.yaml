@@ -11,7 +11,7 @@ spec:
         - containerPort: 8080
         env:
         - name: CORS_ORIGINS
-          value: "https://frontend-service-5memnnzqha-ew.a.run.app"  
+          value: "https://platematch-frontend-403018061895.europe-west1.run.app"  
         - name: HOST
           value: "0.0.0.0"
         resources:

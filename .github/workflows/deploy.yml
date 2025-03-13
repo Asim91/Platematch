@@ -3,7 +3,7 @@ name: Deploy to Google Cloud Run
 on:
   push:
     branches:
-      - master  # This will trigger the workflow on the 'master' branch
+      - master
 
 jobs:
   deploy:
@@ -42,20 +42,27 @@ jobs:
           docker build -t $IMAGE_NAME -f frontend/Dockerfile frontend/
           docker push $IMAGE_NAME
 
-      # Deploy backend to Cloud Run
+      # Deploy backend using service configuration
       - name: Deploy backend to Cloud Run
         run: |
-          gcloud run deploy backend-service \
-            --image gcr.io/platematch/backend \
-            --region europe-west1 \
-            --platform managed \
-            --allow-unauthenticated
+          BACKEND_URL=$(gcloud run services replace deployment/backend-service.yaml --region=europe-west1 --format='value(status.url)')
+          echo "Backend URL: $BACKEND_URL"
 
-      # Deploy frontend to Cloud Run
+      # Update frontend configuration with backend URL
+      - name: Update frontend configuration
+        run: |
+          BACKEND_URL=$(gcloud run services describe platematch-backend --region=europe-west1 --format='value(status.url)')
+          sed -i "s#value: \"https://.*\"#value: \"$BACKEND_URL\"#" deployment/frontend-service.yaml
+
+      # Deploy frontend using service configuration
       - name: Deploy frontend to Cloud Run
         run: |
-          gcloud run deploy frontend-service \
-            --image gcr.io/platematch/frontend \
-            --region europe-west1 \
-            --platform managed \
-            --allow-unauthenticated
+          FRONTEND_URL=$(gcloud run services replace deployment/frontend-service.yaml --region=europe-west1 --format='value(status.url)')
+          echo "Frontend URL: $FRONTEND_URL"
+
+      # Update backend configuration with frontend URL
+      - name: Update backend configuration
+        run: |
+          FRONTEND_URL=$(gcloud run services describe platematch-frontend --region=europe-west1 --format='value(status.url)')
+          sed -i "s#value: \"https://.*\"#value: \"$FRONTEND_URL\"#" deployment/backend-service.yaml
+          gcloud run services replace deployment/backend-service.yaml --region=europe-west1

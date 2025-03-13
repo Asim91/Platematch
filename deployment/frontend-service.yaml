@@ -11,7 +11,7 @@ spec:
         - containerPort: 3000
         env:
         - name: NEXT_PUBLIC_BACKEND_URL
-          value: "https://backend-service-5memnnzqha-ew.a.run.app"  # Replace with actual backend URL after deployment
+          value: "https://platematch-backend-403018061895.europe-west1.run.app"  # Replace with actual backend URL after deployment
         resources:
           limits:
             cpu: "1"
