@@ -18,13 +18,13 @@ HOST = os.getenv('HOST', '0.0.0.0')
 PORT = int(os.getenv('PORT', 8000))
 CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:3000').split(',')
 
-# Configure CORS
+# Configure CORS with more specific settings
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"]
 )
 
 # Create a new router
