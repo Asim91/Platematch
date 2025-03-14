@@ -63,18 +63,18 @@ jobs:
             exit 1
           fi
 
-      # Extract backend URL from backend-service.yaml
-      - name: Extract backend URL from backend-service.yaml
-        id: extract-backend-url
-        run: |
-          BACKEND_URL=$(grep 'value: ' deployment/backend-service.yaml | awk '{print $2}' | tr -d '"')
-          echo "Backend URL: $BACKEND_URL"
-          echo "backend_url=$BACKEND_URL" >> $GITHUB_ENV
-
       # Deploy backend service first
       - name: Deploy backend to Cloud Run
         run: |
           gcloud run services replace deployment/backend-service.yaml --region=europe-west1
+
+      # Extract backend URL from the deployed service
+      - name: Extract backend URL
+        id: extract-backend-url
+        run: |
+          BACKEND_URL=$(gcloud run services describe platematch-backend --region=europe-west1 --format='value(status.url)')
+          echo "Backend URL: $BACKEND_URL"
+          echo "backend_url=$BACKEND_URL" >> $GITHUB_ENV
 
       # Update frontend configuration with backend URL
       - name: Update frontend configuration
@@ -98,11 +98,11 @@ jobs:
         run: |
           gcloud run services replace deployment/frontend-service.yaml --region=europe-west1
 
-      # Extract frontend URL from frontend-service.yaml
-      - name: Extract frontend URL from frontend-service.yaml
+      # Extract frontend URL from the deployed service
+      - name: Extract frontend URL
         id: extract-frontend-url
         run: |
-          FRONTEND_URL=$(grep 'value: ' deployment/frontend-service.yaml | awk '{print $2}' | tr -d '"')
+          FRONTEND_URL=$(gcloud run services describe platematch-frontend --region=europe-west1 --format='value(status.url)')
           echo "Frontend URL: $FRONTEND_URL"
           echo "frontend_url=$FRONTEND_URL" >> $GITHUB_ENV
 
