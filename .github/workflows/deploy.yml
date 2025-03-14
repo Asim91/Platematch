@@ -52,16 +52,20 @@ jobs:
       # Build frontend image with the backend URL as a build argument
       - name: Build and push frontend Docker image
         run: |
-          BACKEND_URL=$(cat /tmp/backend_url.txt)
-          echo "Using backend URL for build: $BACKEND_URL"
+          # Get the backend URL from the previous step
+          BACKEND_URL=$(gcloud run services describe platematch-backend --region=europe-west1 --format='value(status.url)')
+          echo "Using backend URL: $BACKEND_URL"
           
-          # Build with dynamic backend URL
+          # Build with explicit build arg
           docker build \
             --build-arg NEXT_PUBLIC_BACKEND_URL=$BACKEND_URL \
             -t gcr.io/platematch/frontend \
-            -f frontend/Dockerfile frontend/
+            frontend/
           
           docker push gcr.io/platematch/frontend
+          
+          # Also update the environment variable in the frontend service config
+          sed -i "/NEXT_PUBLIC_BACKEND_URL/,/value:/{s|value: .*|value: \"$BACKEND_URL\"|}" deployment/frontend-service.yaml
 
       # Deploy frontend service
       - name: Deploy frontend to Cloud Run
