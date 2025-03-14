@@ -28,81 +28,48 @@ jobs:
         run: |
           gcloud auth configure-docker
 
+      # Extract configuration values from YAML files
+      - name: Extract configuration values
+        id: extract_config
+        run: |
+          # Extract backend URL from frontend service config
+          BACKEND_URL=$(grep -A 2 'NEXT_PUBLIC_BACKEND_URL' deployment/frontend-service.yaml | grep 'value:' | sed 's/.*value: *"\(.*\)".*/\1/')
+          echo "Backend URL from config: $BACKEND_URL"
+          echo "backend_url=$BACKEND_URL" >> $GITHUB_ENV
+          
+          # Extract CORS settings from backend service config
+          CORS_DOMAINS=$(grep -A 2 'CORS_ORIGINS' deployment/backend-service.yaml | grep 'value:' | sed 's/.*value: *"\(.*\)".*/\1/')
+          echo "CORS domains from config: $CORS_DOMAINS"
+          echo "cors_domains=$CORS_DOMAINS" >> $GITHUB_ENV
+
       # Build and push backend Docker image
       - name: Build and push backend Docker image
         run: |
-          IMAGE_NAME=gcr.io/platematch/backend
-          docker build -t $IMAGE_NAME -f backend/Dockerfile backend/
-          docker push $IMAGE_NAME
+          echo "Building backend image"
+          docker build -t gcr.io/platematch/backend -f backend/Dockerfile backend/
+          docker push gcr.io/platematch/backend
 
-      # Deploy backend service first
-      - name: Deploy backend to Cloud Run
-        run: |
-          gcloud run services replace deployment/backend-service.yaml --region=europe-west1
-
-      # Extract backend URL and store it for use in multiple steps
-      - name: Extract backend URL
-        id: extract_backend_url
-        run: |
-          BACKEND_URL=$(gcloud run services describe platematch-backend --region=europe-west1 --format='value(status.url)')
-          echo "Backend URL: $BACKEND_URL"
-          echo "BACKEND_URL=$BACKEND_URL" >> $GITHUB_ENV
-          echo "$BACKEND_URL" > /tmp/backend_url.txt
-
-      # Build frontend image with the backend URL as a build argument
+      # Build and push frontend Docker image with backend URL from config
       - name: Build and push frontend Docker image
         run: |
-          # Get the backend URL from the previous step
-          BACKEND_URL=$(gcloud run services describe platematch-backend --region=europe-west1 --format='value(status.url)')
-          echo "Using backend URL: $BACKEND_URL"
-          
-          # Build with explicit build arg
+          echo "Building frontend with backend URL: ${{ env.backend_url }}"
           docker build \
-            --build-arg NEXT_PUBLIC_BACKEND_URL=$BACKEND_URL \
+            --build-arg NEXT_PUBLIC_BACKEND_URL=${{ env.backend_url }} \
             -t gcr.io/platematch/frontend \
-            frontend/
-          
+            -f frontend/Dockerfile frontend/
           docker push gcr.io/platematch/frontend
-          
-          # Also update the environment variable in the frontend service config
-          sed -i "/NEXT_PUBLIC_BACKEND_URL/,/value:/{s|value: .*|value: \"$BACKEND_URL\"|}" deployment/frontend-service.yaml
 
-      # Deploy frontend service
+      # Deploy backend service using YAML file as-is
+      - name: Deploy backend to Cloud Run
+        run: |
+          echo "Deploying backend service with configuration from backend-service.yaml"
+          gcloud run services replace deployment/backend-service.yaml --region=europe-west1
+
+      # Deploy frontend service using YAML file as-is
       - name: Deploy frontend to Cloud Run
         run: |
+          echo "Deploying frontend service with configuration from frontend-service.yaml"
           gcloud run services replace deployment/frontend-service.yaml --region=europe-west1
-
-      # Extract frontend URL
-      - name: Extract frontend URL
-        id: extract_frontend_url
-        run: |
-          FRONTEND_URL=$(gcloud run services describe platematch-frontend --region=europe-west1 --format='value(status.url)')
-          echo "Frontend URL: $FRONTEND_URL"
-          echo "FRONTEND_URL=$FRONTEND_URL" >> $GITHUB_ENV
-          echo "$FRONTEND_URL" > /tmp/frontend_url.txt
-
-      # Update backend CORS settings with frontend URL
-      - name: Update backend CORS configuration
-        run: |
-          FRONTEND_URL=$(cat /tmp/frontend_url.txt)
-          echo "Updating backend CORS with frontend URL: $FRONTEND_URL"
-          
-          # Get current CORS settings
-          CURRENT_CORS=$(gcloud run services describe platematch-backend --region=europe-west1 --format='value(spec.template.spec.containers[0].env[?(@.name=="CORS_ORIGINS")].value)')
-          
-          # Build new CORS string
-          if [ -z "$CURRENT_CORS" ]; then
-            NEW_CORS="$FRONTEND_URL"
-          elif [[ "$CURRENT_CORS" != *"$FRONTEND_URL"* ]]; then
-            NEW_CORS="$CURRENT_CORS,$FRONTEND_URL"
-          else
-            NEW_CORS="$CURRENT_CORS"
-          fi
-          
-          # Update backend service with new CORS settings
-          gcloud run services update platematch-backend \
-            --region=europe-west1 \
-            --update-env-vars="CORS_ORIGINS=$NEW_CORS"
 
       # Set IAM policies for public access
       - name: Configure public access
@@ -112,8 +79,7 @@ jobs:
             gcloud run services set-iam-policy platematch-backend deployment/policy.yaml --region=europe-west1 --quiet
             gcloud run services set-iam-policy platematch-frontend deployment/policy.yaml --region=europe-west1 --quiet
           else
-            echo "Warning: policy.yaml not found, using default policy"
-            # Set default allow unauthenticated
+            echo "Setting default public access"
             gcloud run services add-iam-policy-binding platematch-backend --region=europe-west1 --member="allUsers" --role="roles/run.invoker" --quiet
             gcloud run services add-iam-policy-binding platematch-frontend --region=europe-west1 --member="allUsers" --role="roles/run.invoker" --quiet
           fi
@@ -126,7 +92,7 @@ jobs:
           
           echo "Frontend Configuration:"
           gcloud run services describe platematch-frontend --region=europe-west1 --format='yaml(spec.template.spec.containers[0].env)'
-      
+
       # Deployment summary
       - name: Deployment Summary
         run: |
