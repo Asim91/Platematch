@@ -17,6 +17,8 @@ spec:
           value: "https://a51m.xyz"
         - name: HOST
           value: "0.0.0.0"
+        - name: DATABASE_URL
+          value: "postgresql://user:password@host:port/database"
         resources:
           limits:
             cpu: "1"

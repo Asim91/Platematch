@@ -3,7 +3,7 @@ name: Deploy to Google Cloud Run
 on:
   push:
     branches:
-      - master
+      - master  # Change to 'main' if that's your primary branch
 
 jobs:
   deploy:
@@ -28,6 +28,15 @@ jobs:
         run: |
           gcloud auth configure-docker
 
+      # Handle shared directory for backend if it exists
+      - name: Prepare backend build context
+        run: |
+          if [ -d "shared" ]; then
+            echo "Copying shared directory to backend"
+            mkdir -p backend/shared
+            cp -r shared/* backend/shared/ || echo "No files to copy"
+          fi
+
       # Build and push backend Docker image
       - name: Build and push backend Docker image
         run: |
@@ -35,17 +44,48 @@ jobs:
           docker build -t $IMAGE_NAME -f backend/Dockerfile backend/
           docker push $IMAGE_NAME
 
+      # Make sure deployment directory exists and files are present
+      - name: Verify deployment files
+        run: |
+          if [ ! -d "deployment" ]; then
+            echo "Deployment directory not found. Creating it."
+            mkdir -p deployment
+          fi
+          
+          # Check for required files
+          if [ ! -f "deployment/backend-service.yaml" ]; then
+            echo "Error: backend-service.yaml not found"
+            exit 1
+          fi
+          
+          if [ ! -f "deployment/frontend-service.yaml" ]; then
+            echo "Error: frontend-service.yaml not found"
+            exit 1
+          fi
+
+      # Extract backend URL from backend-service.yaml
+      - name: Extract backend URL from backend-service.yaml
+        id: extract-backend-url
+        run: |
+          BACKEND_URL=$(grep 'value: ' deployment/backend-service.yaml | awk '{print $2}' | tr -d '"')
+          echo "Backend URL: $BACKEND_URL"
+          echo "backend_url=$BACKEND_URL" >> $GITHUB_ENV
+
       # Deploy backend service first
       - name: Deploy backend to Cloud Run
         run: |
-          BACKEND_URL=$(gcloud run services replace deployment/backend-service.yaml --region=europe-west1 --format='value(status.url)')
-          echo "Backend URL: $BACKEND_URL"
+          gcloud run services replace deployment/backend-service.yaml --region=europe-west1
 
-      # Build frontend with backend URL
+      # Update frontend configuration with backend URL
+      - name: Update frontend configuration
+        run: |
+          sed -i "s#value: \".*\"#value: \"$BACKEND_URL\"#" deployment/frontend-service.yaml
+          echo "Updated frontend-service.yaml:"
+          cat deployment/frontend-service.yaml
+
+      # Build and push frontend Docker image
       - name: Build and push frontend Docker image
         run: |
-          BACKEND_URL=$(gcloud run services describe platematch-backend --region=europe-west1 --format='value(status.url)')
-          echo "Building frontend with BACKEND_URL: $BACKEND_URL"
           IMAGE_NAME=gcr.io/platematch/frontend
           docker build \
             --build-arg NEXT_PUBLIC_BACKEND_URL=$BACKEND_URL \
@@ -53,36 +93,66 @@ jobs:
             -f frontend/Dockerfile frontend/
           docker push $IMAGE_NAME
 
-      # Update frontend configuration with backend URL
-      - name: Update frontend configuration
-        run: |
-          BACKEND_URL=$(gcloud run services describe platematch-backend --region=europe-west1 --format='value(status.url)')
-          echo "Setting frontend to use backend URL: $BACKEND_URL"
-          sed -i "s#value: \"https://.*\"#value: \"$BACKEND_URL\"#" deployment/frontend-service.yaml
-
       # Deploy frontend service
       - name: Deploy frontend to Cloud Run
         run: |
-          FRONTEND_URL=$(gcloud run services replace deployment/frontend-service.yaml --region=europe-west1 --format='value(status.url)')
+          gcloud run services replace deployment/frontend-service.yaml --region=europe-west1
+
+      # Extract frontend URL from frontend-service.yaml
+      - name: Extract frontend URL from frontend-service.yaml
+        id: extract-frontend-url
+        run: |
+          FRONTEND_URL=$(grep 'value: ' deployment/frontend-service.yaml | awk '{print $2}' | tr -d '"')
           echo "Frontend URL: $FRONTEND_URL"
+          echo "frontend_url=$FRONTEND_URL" >> $GITHUB_ENV
 
       # Update backend CORS with frontend URL
       - name: Update backend CORS configuration
         run: |
-          FRONTEND_URL=$(gcloud run services describe platematch-frontend --region=europe-west1 --format='value(status.url)')
-          sed -i "s#value: \"https://.*\"#value: \"$FRONTEND_URL\"#" deployment/backend-service.yaml
+          # Extract current CORS settings
+          CURRENT_CORS=$(gcloud run services describe platematch-backend --region=europe-west1 --format='value(spec.template.spec.containers[0].env[?(@.name=="CORS_ORIGINS")].value)')
+          
+          # Combine with frontend URL
+          if [[ -z "$CURRENT_CORS" ]]; then
+            NEW_CORS="$FRONTEND_URL"
+          elif [[ "$CURRENT_CORS" != *"$FRONTEND_URL"* ]]; then
+            NEW_CORS="$CURRENT_CORS,$FRONTEND_URL"
+          else
+            NEW_CORS="$CURRENT_CORS"
+          fi
+          
+          # Update backend-service.yaml with better sed pattern
+          sed -i "/name: CORS_ORIGINS/,/value:/{s/value: .*/value: \"$NEW_CORS\"/}" deployment/backend-service.yaml
+          echo "Updated backend-service.yaml:"
+          cat deployment/backend-service.yaml
+          
+          # Apply updates
           gcloud run services replace deployment/backend-service.yaml --region=europe-west1
 
       # Set IAM policies for public access
       - name: Configure public access
         run: |
-          gcloud run services set-iam-policy platematch-backend deployment/policy.yaml --region=europe-west1
-          gcloud run services set-iam-policy platematch-frontend deployment/policy.yaml --region=europe-west1
+          if [ -f "deployment/policy.yaml" ]; then
+            echo "Using policy.yaml for IAM settings"
+            gcloud run services set-iam-policy platematch-backend deployment/policy.yaml --region=europe-west1
+            gcloud run services set-iam-policy platematch-frontend deployment/policy.yaml --region=europe-west1
+          else
+            echo "Warning: policy.yaml not found, using default policy"
+            # Set default allow unauthenticated
+            gcloud run services add-iam-policy-binding platematch-backend --region=europe-west1 --member="allUsers" --role="roles/run.invoker"
+            gcloud run services add-iam-policy-binding platematch-frontend --region=europe-west1 --member="allUsers" --role="roles/run.invoker"
 
       # Verify final configuration
       - name: Verify Service Configuration
         run: |
           echo "Backend Configuration:"
           gcloud run services describe platematch-backend --region=europe-west1 --format='yaml(spec.template.spec.containers[0].env)'
-          echo "\nFrontend Configuration:"
+          echo "Frontend Configuration:"
           gcloud run services describe platematch-frontend --region=europe-west1 --format='yaml(spec.template.spec.containers[0].env)'
+
+      # Notify about deployment completion
+      - name: Deployment Summary
+        run: |
+          echo "Deployment completed successfully!"
+          echo "Frontend is available at: $FRONTEND_URL"
+          echo "Backend API is available at: $BACKEND_URL"
