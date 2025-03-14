@@ -7,6 +7,7 @@ from fuzzywuzzy import fuzz
 import io
 from app.routes.scraper import router as scraper_router, scrape_auction_data  # Import the router and function
 from dotenv import load_dotenv
+from .routes import status  # Add this import
 
 # Load environment variables
 load_dotenv()
@@ -149,3 +150,6 @@ async def root():
 # Update routes without /api prefix since we're using api.a51m.xyz
 app.include_router(router)  # Remove /api prefix
 app.include_router(scraper_router)  # Remove /api/scraper prefix
+
+# Add the status router
+app.include_router(status.router)

@@ -17,6 +17,7 @@ import {
 import styles from './styles/Home.module.css';
 import { COOKIE_KEYS } from '@/constants/cookies';
 import { getCookieOptions } from '@/utils/cookieConfig';
+import StatusIndicators from '@/components/StatusIndicators';
 
 interface Comparison {
   lot_number: string;
@@ -255,6 +256,10 @@ export default function Home() {
     <div className={styles.container}>
       <div className={styles.connectionIndicator}>
         <div className={`${styles.statusDot} ${isBackendConnected ? styles.connected : styles.disconnected}`} />
+      </div>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">RegName Matcher</h1>
+        <StatusIndicators />
       </div>
       <div className={styles.formWrapper}>
         <h1 className={styles.mainTitle}>Registration Name Matcher</h1>
