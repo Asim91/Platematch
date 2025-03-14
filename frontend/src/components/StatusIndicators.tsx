@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getBackendUrl } from '@/utils/environment';
+import styles from '../app/styles/StatusIndicator.module.css';
+
+interface StatusData {
+  api: {
+    status: string;
+  };
+  database: {
+    connected: boolean;
+  };
+}
 
 export default function StatusIndicators() {
   const [apiConnected, setApiConnected] = useState(false);
@@ -10,10 +20,11 @@ export default function StatusIndicators() {
     const checkStatus = async () => {
       try {
         const backendUrl = getBackendUrl();
-        const response = await axios.get(`${backendUrl}/status`);
+        const response = await axios.get<StatusData>(`${backendUrl}/status`);
         setApiConnected(true);
         setDbConnected(response.data.database.connected);
       } catch {
+        // We already handle errors by setting connection states to false
         setApiConnected(false);
         setDbConnected(false);
       }
@@ -26,14 +37,14 @@ export default function StatusIndicators() {
   }, []);
   
   return (
-    <div className="flex space-x-2 items-center">
-      <div className="flex items-center">
-        <div className={`w-2 h-2 rounded-full mr-1 ${apiConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-        <span className="text-xs text-gray-600">API</span>
+    <div className={styles.indicators}>
+      <div className={styles.indicator}>
+        <div className={`${styles.dot} ${apiConnected ? styles.connected : styles.disconnected}`}></div>
+        <span className={styles.label}>API</span>
       </div>
-      <div className="flex items-center">
-        <div className={`w-2 h-2 rounded-full mr-1 ${dbConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-        <span className="text-xs text-gray-600">DB</span>
+      <div className={styles.indicator}>
+        <div className={`${styles.dot} ${dbConnected ? styles.connected : styles.disconnected}`}></div>
+        <span className={styles.label}>DB</span>
       </div>
     </div>
   );

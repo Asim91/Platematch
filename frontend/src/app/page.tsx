@@ -38,7 +38,6 @@ export default function Home() {
   const [name, setName] = useState<string>('');
   const [names, setNames] = useState<string[]>([]);
   const [data, setData] = useState<Comparison[]>([]);
-  const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -71,24 +70,6 @@ export default function Home() {
       getCookieOptions(isDev)
     );
   }, [names]);
-
-  useEffect(() => {
-    const checkBackendConnection = async () => {
-      try {
-        await axios.get(`${backendUrl}/health`); 
-        setIsBackendConnected(true);
-      } catch (error) {
-        console.error('Backend connection failed:', error);
-        setIsBackendConnected(false);
-      }
-    };
-
-    // Check connection immediately and every 30 seconds
-    checkBackendConnection();
-    const interval = setInterval(checkBackendConnection, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -254,13 +235,7 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.connectionIndicator}>
-        <div className={`${styles.statusDot} ${isBackendConnected ? styles.connected : styles.disconnected}`} />
-      </div>
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">RegName Matcher</h1>
-        <StatusIndicators />
-      </div>
+      <StatusIndicators />
       <div className={styles.formWrapper}>
         <h1 className={styles.mainTitle}>Registration Name Matcher</h1>
         <form onSubmit={handleSubmit} className={styles.form}>
