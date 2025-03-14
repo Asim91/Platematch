@@ -141,6 +141,7 @@ jobs:
             # Set default allow unauthenticated
             gcloud run services add-iam-policy-binding platematch-backend --region=europe-west1 --member="allUsers" --role="roles/run.invoker"
             gcloud run services add-iam-policy-binding platematch-frontend --region=europe-west1 --member="allUsers" --role="roles/run.invoker"
+          fi
 
       # Verify final configuration
       - name: Verify Service Configuration
