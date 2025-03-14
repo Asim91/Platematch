@@ -42,6 +42,13 @@ export default function StatusPage() {
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [tableData, setTableData] = useState<TableData | null>(null);
   const [isLoadingTableData, setIsLoadingTableData] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [initResult, setInitResult] = useState<{
+    success: boolean;
+    message: string;
+    tablesCreated?: string[];
+    tablesSkipped?: string[];
+  } | null>(null);
   
   const fetchStatus = async () => {
     try {
@@ -66,17 +73,36 @@ export default function StatusPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const createDummyData = async () => {
+  const confirmInitializeDatabase = () => {
+    setShowConfirmation(true);
+  };
+  
+  const cancelInitialization = () => {
+    setShowConfirmation(false);
+  };
+
+  const initializeDatabase = async () => {
     try {
       setIsCreatingData(true);
+      setShowConfirmation(false);
       const backendUrl = getBackendUrl();
-      await axios.post(`${backendUrl}/create-dummy-data`);
-      // Refresh status after creating data
+      const response = await axios.post(`${backendUrl}/initialize-database`);
+      // Refresh status after initializing
       await fetchStatus();
-      alert('Dummy data created successfully');
+      
+      // Store the initialization result
+      setInitResult({
+        success: true,
+        message: 'Database initialized successfully',
+        tablesCreated: response.data.tables_created,
+        tablesSkipped: response.data.tables_skipped
+      });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      alert(`Failed to create dummy data: ${errorMessage}`);
+      setInitResult({
+        success: false,
+        message: `Failed to initialize database: ${errorMessage}`
+      });
     } finally {
       setIsCreatingData(false);
     }
@@ -123,6 +149,31 @@ export default function StatusPage() {
         </div>
       )}
       
+      {/* Show init result if available */}
+      {initResult && (
+        <div className={`p-4 rounded-lg border mb-6 ${
+          initResult.success ? 'bg-green-100 border-green-300 text-green-800' : 'bg-red-100 border-red-300 text-red-800'
+        }`}>
+          <div className="font-medium mb-2">{initResult.message}</div>
+          {initResult.tablesCreated && initResult.tablesCreated.length > 0 && (
+            <div>
+              <span className="font-medium">Tables created:</span> {initResult.tablesCreated.join(', ')}
+            </div>
+          )}
+          {initResult.tablesSkipped && initResult.tablesSkipped.length > 0 && (
+            <div>
+              <span className="font-medium">Tables skipped (already exist):</span> {initResult.tablesSkipped.join(', ')}
+            </div>
+          )}
+          <button 
+            className="text-sm underline mt-2 hover:no-underline focus:outline-none" 
+            onClick={() => setInitResult(null)}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
+      
       {/* API Status */}
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>API</h2>
@@ -155,10 +206,10 @@ export default function StatusPage() {
           
           <button 
             className={styles.button}
-            onClick={createDummyData}
+            onClick={confirmInitializeDatabase}
             disabled={isCreatingData}
           >
-            {isCreatingData ? 'Creating...' : 'Create Dummy Data'}
+            {isCreatingData ? 'Initializing...' : 'Initialize Database'}
           </button>
           
           {statusData?.database.tables && statusData.database.tables.length > 0 ? (
@@ -208,6 +259,25 @@ export default function StatusPage() {
           )}
         </div>
       </div>
+      
+      {/* Confirmation Dialog */}
+      {showConfirmation && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.confirmationModal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Confirm Database Initialization</h3>
+            </div>
+            <div className={styles.modalBody}>
+              <p>This will create database tables based on the schema definition. Existing tables will be kept untouched.</p>
+              <p className="mt-3 font-medium">Are you sure you want to proceed?</p>
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={styles.cancelButton} onClick={cancelInitialization}>Cancel</button>
+              <button className={styles.confirmButton} onClick={initializeDatabase}>Initialize</button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Table Data Modal */}
       {selectedTable && (
